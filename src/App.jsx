@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKQ96Cl8jtCzlcW9sdY8zJ8xC_4iOCxRnSL_kAzt28hxtHw2pWPUe4q2vPpkbKeY7W/exec";
+const APPS_SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_URL_HERE";
 
 const SHEET_URLS = {
   9:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=0&single=true&output=csv",
@@ -61,31 +61,42 @@ export default function App() {
   const [loading, setLoading]   = useState({ 9: true, 10: true, 11: true, 12: true });
   const [saving, setSaving]     = useState(false);
   const [saveMsg, setSaveMsg]   = useState(null);
-  const [open, setOpen]         = useState(null);
+  const [open, setOpen]         = useState(null); // stores "grade_id"
   const [filter, setFilter]     = useState("All");
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing]   = useState(null);
   const [form, setForm]         = useState(EMPTY_FORM);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [lastUpdated, setLastUpdated]   = useState(null);
+  const [refreshing, setRefreshing]     = useState(false);
 
   const g      = GRADES[grade];
   const acc    = g.color;
   const tabAcc = g.tabColor || g.color;
 
-  async function fetchGrade(gr) {
-    setLoading(prev => ({ ...prev, [gr]: true }));
+  async function fetchGrade(gr, silent = false) {
+    if (!silent) setLoading(prev => ({ ...prev, [gr]: true }));
+    if (silent) setRefreshing(true);
     try {
       const res  = await fetch(SHEET_URLS[gr] + "&t=" + Date.now());
       const text = await res.text();
       setData(prev => ({ ...prev, [gr]: parseCSV(text) }));
+      if (gr === 9 || silent) setLastUpdated(new Date());
     } catch {
       setData(prev => ({ ...prev, [gr]: [] }));
     } finally {
-      setLoading(prev => ({ ...prev, [gr]: false }));
+      if (!silent) setLoading(prev => ({ ...prev, [gr]: false }));
+      if (silent) setRefreshing(false);
     }
   }
 
-  useEffect(() => { [9,10,11,12].forEach(fetchGrade); }, []);
+  useEffect(() => {
+    [9,10,11,12].forEach(gr => fetchGrade(gr));
+    const interval = setInterval(() => {
+      [9,10,11,12].forEach(gr => fetchGrade(gr, true));
+    }, 5 * 60 * 1000); // every 5 minutes
+    return () => clearInterval(interval);
+  }, []);
 
   function flash(type, text) {
     setSaveMsg({ type, text });
@@ -164,8 +175,8 @@ export default function App() {
         <span style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>OBHS</span>
         <span style={{ color: "#5a5880", fontSize: 13 }}>Class Advisor Catalog</span>
         <div style={{ flex: 1 }} />
-        <button onClick={() => fetchGrade(grade)} title="Refresh"
-          style={{ background: "transparent", border: "none", color: "#5a5880", cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "2px 6px" }}>↻</button>
+        <button onClick={() => [9,10,11,12].forEach(gr => fetchGrade(gr, true))} title="Refresh from Google Sheets"
+          style={{ background: "transparent", border: "none", color: refreshing ? tabAcc : "#5a5880", cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "2px 6px", transition: "color 0.3s", animation: refreshing ? "spin 1s linear infinite" : "none" }}>↻</button>
       </div>
 
       {/* ── TOAST ── */}
@@ -339,7 +350,7 @@ export default function App() {
               overflow: "hidden"
             }}>
               {/* Row */}
-              <div onClick={() => setOpen(open === task.id ? null : task.id)}
+              <div onClick={() => setOpen(open === `${grade}_${task.id}` ? null : `${grade}_${task.id}`)}
                 style={{ display: "flex", alignItems: "center", padding: "14px 16px", cursor: "pointer", gap: 12 }}>
                 <span style={{
                   background: g.pill, color: tabAcc, borderRadius: 4,
@@ -353,11 +364,11 @@ export default function App() {
                   {task.leadtime  && <span style={{ fontSize: 9, background: "rgba(255,200,80,0.12)", color: "#c8a030", border: "1px solid rgba(255,200,80,0.2)", borderRadius: 4, padding: "2px 5px", whiteSpace: "nowrap" }}>⏱</span>}
                   {task.contacts  && <span style={{ fontSize: 9, background: "rgba(80,180,255,0.1)",  color: "#60b0e0", border: "1px solid rgba(80,180,255,0.2)",  borderRadius: 4, padding: "2px 5px", whiteSpace: "nowrap" }}>📋</span>}
                 </div>
-                <span style={{ color: "#3a3860", fontSize: 11 }}>{open === task.id ? "▲" : "▼"}</span>
+                <span style={{ color: "#3a3860", fontSize: 11 }}>{open === `${grade}_${task.id}` ? "▲" : "▼"}</span>
               </div>
 
               {/* Expanded */}
-              {open === task.id && (
+              {open === `${grade}_${task.id}` && (
                 <div style={{ borderTop: "1px solid #1e1c4a", padding: "14px 16px", background: "#16143a" }}>
 
                   {task.description && (
@@ -415,7 +426,9 @@ export default function App() {
         <span style={{ color: "#3a3860", fontSize: 11 }}>
           {isLoading ? "Loading…" : `${list.length} task${list.length !== 1 ? "s" : ""} · ${g.label}`}
         </span>
-        <span style={{ color: "#3a3860", fontSize: 11 }}>OBHS Advisor Catalog</span>
+        <span style={{ color: "#3a3860", fontSize: 11 }}>
+          {lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "OBHS Advisor Catalog"}
+        </span>
       </div>
     </div>
   );
