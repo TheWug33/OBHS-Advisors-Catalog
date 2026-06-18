@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkE_ifBFEExmfaYtsDyDNKeiT3lwObRE6Rh09U9XL4wVlAbSIk6F-jrXYdi9X7Pru7/exec";
+const APPS_SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_URL_HERE";
 
 const SHEET_URLS = {
   9:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=0&single=true&output=csv",
@@ -131,14 +131,29 @@ export default function App() {
     setSaving(true);
     try {
       if (editing) {
-await callScript({ action: "update", sheet: SHEET_NAMES[grade], ...form, originalTitle: editing.title, originalMonth: editing.month })
+        await callScript({ action: "update", sheet: SHEET_NAMES[grade], ...form, originalTitle: editing.title, originalMonth: editing.month });
+        // Update local state immediately — don't wait for Google cache
+        setData(prev => ({
+          ...prev,
+          [grade]: prev[grade].map(t =>
+            t.title === editing.title && t.month === editing.month
+              ? { ...t, ...form }
+              : t
+          )
+        }));
       } else {
         await callScript({ action: "add", sheet: SHEET_NAMES[grade], ...form });
+        // Add to local state immediately
+        setData(prev => ({
+          ...prev,
+          [grade]: [...prev[grade], { ...form, _row: prev[grade].length + 2 }]
+        }));
       }
       setShowForm(false);
-      // Delay re-fetch to allow Google Sheets cache to update (~5s lag)
-      flash("ok", editing ? "Saved! Refreshing shortly…" : "Added! Refreshing shortly…");
-      setTimeout(() => fetchGrade(grade), 7000);
+      setEditing(null);
+      flash("ok", "Saved!");
+      // Also do a background refresh after delay to stay in sync with sheet
+      setTimeout(() => fetchGrade(grade, true), 8000);
     } catch (e) {
       flash("err", e.message);
     } finally {
@@ -151,9 +166,15 @@ await callScript({ action: "update", sheet: SHEET_NAMES[grade], ...form, origina
     setConfirmDelete(null);
     try {
       await callScript({ action: "delete", sheet: SHEET_NAMES[grade], originalTitle: task.title, originalMonth: task.month });
-      flash("ok", "Task removed! Refreshing shortly…");
+      // Remove from local state immediately
+      setData(prev => ({
+        ...prev,
+        [grade]: prev[grade].filter(t => !(t.title === task.title && t.month === task.month))
+      }));
       setOpen(null);
-      setTimeout(() => fetchGrade(grade), 7000);
+      flash("ok", "Task removed!");
+      // Background refresh after delay
+      setTimeout(() => fetchGrade(grade, true), 8000);
     } catch (e) {
       flash("err", e.message);
     } finally {
