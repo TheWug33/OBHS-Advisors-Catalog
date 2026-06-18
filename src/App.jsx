@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkE_ifBFEExmfaYtsDyDNKeiT3lwObRE6Rh09U9XL4wVlAbSIk6F-jrXYdi9X7Pru7/exec";
+const APPS_SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_URL_HERE";
 
 const SHEET_URLS = {
   9:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=0&single=true&output=csv",
   10: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=955151150&single=true&output=csv",
   11: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=1311311312&single=true&output=csv",
   12: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=449365991&single=true&output=csv",
-  vendors: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pubhtml?gid=847121101&single=true",
+  vendors: "PASTE_VENDORS_SHEET_CSV_URL_HERE",
 };
 
 const SHEET_NAMES = { 9: "Freshmen", 10: "Sophomores", 11: "Juniors", 12: "Seniors", vendors: "Vendors" };
@@ -112,24 +112,32 @@ export default function App() {
   async function handleFileUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
+    // Reset file input so same file can be re-selected after error
+    e.target.value = "";
     setUploading(true);
     try {
-      const reader = new FileReader();
-      reader.onload = async (ev) => {
-        const base64 = ev.target.result.split(",")[1];
-        const result = await callScript({
-          action: "uploadFile",
-          fileName: file.name,
-          mimeType: file.type,
-          base64Data: base64,
-        });
-        setTaskForm(f => ({ ...f, fileurl: result.url }));
-        flash("ok", `File uploaded: ${file.name}`);
-        setUploading(false);
-      };
-      reader.readAsDataURL(file);
+      await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+          try {
+            const base64 = ev.target.result.split(",")[1];
+            const result = await callScript({
+              action: "uploadFile",
+              fileName: file.name,
+              mimeType: file.type,
+              base64Data: base64,
+            });
+            setTaskForm(f => ({ ...f, fileurl: result.url }));
+            flash("ok", `Uploaded: ${file.name}`);
+            resolve();
+          } catch (err) { reject(err); }
+        };
+        reader.onerror = () => reject(new Error("File read failed"));
+        reader.readAsDataURL(file);
+      });
     } catch (err) {
-      flash("err", "Upload failed: " + err.message);
+      flash("err", "Upload failed: " + err.message + ". Make sure the Apps Script is redeployed with Drive access.");
+    } finally {
       setUploading(false);
     }
   }
@@ -374,17 +382,15 @@ export default function App() {
               <textarea value={taskForm.description} onChange={e => setTaskForm(f => ({ ...f, description: e.target.value }))}
                 rows={3} placeholder="What's involved, key steps, approvals needed..." style={{ ...FF, resize: "vertical" }} />
             </div>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <div style={{ flex: 1, minWidth: 160 }}>
-                <div style={LL}>⏱ Lead Time</div>
-                <input value={taskForm.leadtime} onChange={e => setTaskForm(f => ({ ...f, leadtime: e.target.value }))}
-                  placeholder="e.g. Book 6 months in advance" style={FF} />
-              </div>
-              <div style={{ flex: 1, minWidth: 160 }}>
-                <div style={LL}>📋 Who to Contact</div>
-                <input value={taskForm.contacts} onChange={e => setTaskForm(f => ({ ...f, contacts: e.target.value }))}
-                  placeholder="e.g. Mrs. Smith, ext. 204" style={FF} />
-              </div>
+            <div>
+              <div style={LL}>⏱ Lead Time</div>
+              <input value={taskForm.leadtime} onChange={e => setTaskForm(f => ({ ...f, leadtime: e.target.value }))}
+                placeholder="e.g. Book 6 months in advance" style={FF} />
+            </div>
+            <div>
+              <div style={LL}>📋 Who to Contact</div>
+              <input value={taskForm.contacts} onChange={e => setTaskForm(f => ({ ...f, contacts: e.target.value }))}
+                placeholder="e.g. Mrs. Smith, ext. 204" style={FF} />
             </div>
             <div>
               <div style={LL}>★ Advisor Notes</div>
