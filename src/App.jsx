@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkE_ifBFEExmfaYtsDyDNKeiT3lwObRE6Rh09U9XL4wVlAbSIk6F-jrXYdi9X7Pru7/exec";
+const APPS_SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_URL_HERE";
 
 const SHEET_URLS = {
   9:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=0&single=true&output=csv",
@@ -39,8 +39,9 @@ function parseCSV(text) {
     cols.push(cur);
     const obj = {};
     headers.forEach((h, idx) => { obj[h] = (cols[idx] || "").replace(/^"|"$/g, "").trim(); });
-    // Use the sheet's id column; fall back to a unique row+random key
-    if (!obj.id) obj.id = String(i + 1) + "_" + Math.random().toString(36).slice(2, 6);
+    // Always track the actual sheet row number (row 2 = index 0, so +2)
+    // This is what the Apps Script uses to find and update the correct row
+    obj._row = i + 2; // actual sheet row (header=1, first data row=2)
     return obj;
   }).filter(r => r.title || r.month);
 }
@@ -130,7 +131,7 @@ export default function App() {
     setSaving(true);
     try {
       if (editing) {
-        await callScript({ action: "update", sheet: SHEET_NAMES[grade], id: editing.id, ...form });
+await callScript({ action: "update", sheet: SHEET_NAMES[grade], ...form, originalTitle: editing.title, originalMonth: editing.month })
       } else {
         await callScript({ action: "add", sheet: SHEET_NAMES[grade], ...form });
       }
@@ -149,7 +150,7 @@ export default function App() {
     setSaving(true);
     setConfirmDelete(null);
     try {
-      await callScript({ action: "delete", sheet: SHEET_NAMES[grade], id: task.id });
+      await callScript({ action: "delete", sheet: SHEET_NAMES[grade], originalTitle: task.title, originalMonth: task.month });
       flash("ok", "Task removed! Refreshing shortly…");
       setOpen(null);
       setTimeout(() => fetchGrade(grade), 7000);
