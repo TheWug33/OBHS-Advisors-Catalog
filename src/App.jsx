@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkE_ifBFEExmfaYtsDyDNKeiT3lwObRE6Rh09U9XL4wVlAbSIk6F-jrXYdi9X7Pru7/exec";
+const APPS_SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_URL_HERE";
 
 const SHEET_URLS = {
   9:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=0&single=true&output=csv",
@@ -71,34 +71,29 @@ export default function App() {
   const [form, setForm]         = useState(EMPTY_FORM);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [lastUpdated, setLastUpdated]   = useState(null);
-  const [refreshing, setRefreshing]     = useState(false);
 
   const g      = GRADES[grade];
   const acc    = g.color;
   const tabAcc = g.tabColor || g.color;
 
-  async function fetchGrade(gr, silent = false) {
-    if (!silent) setLoading(prev => ({ ...prev, [gr]: true }));
-    if (silent) setRefreshing(true);
+  async function fetchGrade(gr) {
+    setLoading(prev => ({ ...prev, [gr]: true }));
     try {
       const res  = await fetch(SHEET_URLS[gr] + "&t=" + Date.now());
       const text = await res.text();
       setData(prev => ({ ...prev, [gr]: parseCSV(text) }));
-      if (gr === 9 || silent) setLastUpdated(new Date());
+      if (gr === 9) setLastUpdated(new Date());
     } catch {
       setData(prev => ({ ...prev, [gr]: [] }));
     } finally {
-      if (!silent) setLoading(prev => ({ ...prev, [gr]: false }));
-      if (silent) setRefreshing(false);
+      setLoading(prev => ({ ...prev, [gr]: false }));
     }
   }
 
   useEffect(() => {
     [9,10,11,12].forEach(gr => fetchGrade(gr));
-    const interval = setInterval(() => {
-      [9,10,11,12].forEach(gr => fetchGrade(gr, true));
-    }, 5 * 60 * 1000); // every 5 minutes
-    return () => clearInterval(interval);
+    // No auto-refresh — manual refresh button handles updates
+    // Auto-refresh caused duplicates by overwriting optimistic state
   }, []);
 
   function flash(type, text) {
@@ -197,8 +192,8 @@ export default function App() {
         <span style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>OBHS</span>
         <span style={{ color: "#5a5880", fontSize: 13 }}>Class Advisor Catalog</span>
         <div style={{ flex: 1 }} />
-        <button onClick={() => [9,10,11,12].forEach(gr => fetchGrade(gr, true))} title="Refresh from Google Sheets"
-          style={{ background: "transparent", border: "none", color: refreshing ? tabAcc : "#5a5880", cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "2px 6px", transition: "color 0.3s", animation: refreshing ? "spin 1s linear infinite" : "none" }}>↻</button>
+        <button onClick={() => { setOpen(null); [9,10,11,12].forEach(gr => fetchGrade(gr)); }} title="Refresh from Google Sheets"
+          style={{ background: "transparent", border: "none", color: "#5a5880", cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "2px 6px" }}>↻</button>
       </div>
 
       {/* ── TOAST ── */}
