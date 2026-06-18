@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkE_ifBFEExmfaYtsDyDNKeiT3lwObRE6Rh09U9XL4wVlAbSIk6F-jrXYdi9X7Pru7/exec";
+const APPS_SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_URL_HERE";
 
 const SHEET_URLS = {
   9:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=0&single=true&output=csv",
@@ -394,7 +394,10 @@ export default function App() {
                 <div style={{ borderTop: "1px solid #1e1c4a", padding: "14px 16px", background: "#16143a" }}>
 
                   {task.description && (
-                    <p style={{ margin: "0 0 14px", fontSize: 14, color: "#a099c8", lineHeight: 1.7 }}>{task.description}</p>
+                    <div style={{ background: "rgba(40,200,120,0.07)", border: "1px solid rgba(40,200,120,0.2)", borderLeft: "3px solid #28c878", borderRadius: 6, padding: "10px 12px", marginBottom: 14 }}>
+                      <span style={{ display: "block", fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#28c878", marginBottom: 4 }}>📝 Description</span>
+                      <span style={{ fontSize: 13, color: "#80e8b0", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{task.description}</span>
+                    </div>
                   )}
 
                   {/* Lead Time + Contacts row */}
@@ -418,7 +421,7 @@ export default function App() {
                   {task.notes && (
                     <div style={{ background: "rgba(155,109,255,0.1)", border: "1px solid rgba(155,109,255,0.25)", borderLeft: "3px solid #9b6dff", borderRadius: 6, padding: "10px 12px", marginBottom: 14 }}>
                       <span style={{ display: "block", fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#9b6dff", marginBottom: 4 }}>★ Advisor Notes</span>
-                      <span style={{ fontSize: 13, color: "#c4a0ff", lineHeight: 1.6 }}>{task.notes}</span>
+                      <span style={{ fontSize: 13, color: "#c4a0ff", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{task.notes}</span>
                     </div>
                   )}
 
