@@ -237,10 +237,12 @@ export default function App() {
   const isLoading = loading[tab];
 
   return (
-    <div style={{ background: "#0a0818", minHeight: "100vh", fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <div style={{ background: "#0a0818", minHeight: "100vh", width: "100%", fontFamily: "'Inter', system-ui, sans-serif" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; background: #0a0818; }
+        body { overflow-x: hidden; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-thumb { background: #2a2560; border-radius: 2px; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -249,6 +251,8 @@ export default function App() {
         .btn-p { transition: opacity 0.15s, transform 0.1s; }
         .btn-p:hover { opacity: 0.88; }
         .btn-p:active { transform: scale(0.98); }
+        .tabscroll::-webkit-scrollbar { display: none; }
+        .tabscroll { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
       {/* ── NAV ── */}
@@ -310,26 +314,26 @@ export default function App() {
 
       {/* ── TABS ── */}
       <div style={{ background: "#0d0b20", borderBottom: "1px solid #1a1640" }}>
-        <div style={{ display: "flex", maxWidth: 800, margin: "0 auto", padding: "0 12px" }}>
+        <div className="tabscroll" style={{ display: "flex", maxWidth: 800, margin: "0 auto", padding: "0 8px", overflowX: "auto" }}>
           {[9,10,11,12].map(gr => {
             const gc = GRADES[gr]; const active = tab === gr; const tc = gc.tabColor || gc.color;
             return (
               <button key={gr} onClick={() => { setTab(gr); setOpen(null); setShowForm(false); }}
-                style={{ flex: 1, padding: "14px 4px 12px", background: "transparent", border: "none",
+                style={{ flex: "1 0 auto", padding: "14px 14px 12px", background: "transparent", border: "none",
                   borderBottom: active ? `2px solid ${tc}` : "2px solid transparent",
                   color: active ? tc : "#3a3860", fontWeight: active ? 700 : 500,
-                  fontSize: 11.5, cursor: "pointer", letterSpacing: 0.8, textTransform: "uppercase",
-                  transition: "all 0.15s", marginBottom: -1 }}>
+                  fontSize: 11, cursor: "pointer", letterSpacing: 0.6, textTransform: "uppercase",
+                  transition: "all 0.15s", marginBottom: -1, whiteSpace: "nowrap" }}>
                 {gc.label}
               </button>
             );
           })}
           <button onClick={() => { setTab("vendors"); setOpen(null); setShowForm(false); }}
-            style={{ flex: 1, padding: "14px 4px 12px", background: "transparent", border: "none",
+            style={{ flex: "1 0 auto", padding: "14px 14px 12px", background: "transparent", border: "none",
               borderBottom: tab === "vendors" ? "2px solid #e0a040" : "2px solid transparent",
               color: tab === "vendors" ? "#e0a040" : "#3a3860",
-              fontWeight: tab === "vendors" ? 700 : 500, fontSize: 11.5, cursor: "pointer",
-              letterSpacing: 0.8, textTransform: "uppercase", marginBottom: -1 }}>
+              fontWeight: tab === "vendors" ? 700 : 500, fontSize: 11, cursor: "pointer",
+              letterSpacing: 0.6, textTransform: "uppercase", marginBottom: -1, whiteSpace: "nowrap" }}>
             Vendors
           </button>
         </div>
