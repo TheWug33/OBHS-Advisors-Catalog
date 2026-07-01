@@ -8,17 +8,17 @@ const SHEET_URLS = {
   10: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=955151150&single=true&output=csv",
   11: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=1311311312&single=true&output=csv",
   12: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=449365991&single=true&output=csv",
-  vendors: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=847121101&single=true&output=csv",
+  vendors: "PASTE_VENDORS_SHEET_CSV_URL_HERE",
 };
 
 const SHEET_NAMES = { 9: "Freshmen", 10: "Sophomores", 11: "Juniors", 12: "Seniors", vendors: "Vendors" };
 const MONTHS = ["August","September","October","November","December","January","February","March","April","May","June","July"];
 
 const GRADES = {
-  9:  { label: "Freshmen",   color: "#e8e8ff", text: "#0e0c30" },
-  10: { label: "Sophomores", color: "#b0b0b0", text: "#0e0c30", tabColor: "#a0a0a0" },
-  11: { label: "Juniors",    color: "#c8c8c8", text: "#0e0c30", tabColor: "#909090" },
-  12: { label: "Seniors",    color: "#a78bfa", text: "#0e0c30" },
+  9:  { label: "Grade 9",  color: "#e8e8ff", text: "#0e0c30" },
+  10: { label: "Grade 10", color: "#b0b0b0", text: "#0e0c30", tabColor: "#a0a0a0" },
+  11: { label: "Grade 11", color: "#c8c8c8", text: "#0e0c30", tabColor: "#909090" },
+  12: { label: "Grade 12", color: "#a78bfa", text: "#0e0c30" },
 };
 
 const STATUS_CONFIG = {
