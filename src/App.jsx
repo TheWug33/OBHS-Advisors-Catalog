@@ -120,6 +120,8 @@ export default function App() {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [search, setSearch]     = useState("");
+  const [view, setView]         = useState("list"); // "list" | "timeline"
   const fileInputRef = useRef(null);
 
   const isVendors = tab === "vendors";
@@ -232,8 +234,13 @@ export default function App() {
     finally { setSaving(false); }
   }
 
-  const taskList = (data[grade] || []).slice().sort((a, b) => MONTHS.indexOf(a.month) - MONTHS.indexOf(b.month));
-  const vendorList = (data.vendors || []).slice().sort((a,b) => (a.name||"").localeCompare(b.name||""));
+  const searchLower = search.trim().toLowerCase();
+  const taskList = (data[grade] || [])
+    .filter(t => !searchLower || [t.title, t.description, t.notes, t.contacts, t.leadtime].some(f => (f||"").toLowerCase().includes(searchLower)))
+    .slice().sort((a, b) => MONTHS.indexOf(a.month) - MONTHS.indexOf(b.month));
+  const vendorList = (data.vendors || [])
+    .filter(v => !searchLower || [v.name, v.category, v.contact, v.notes].some(f => (f||"").toLowerCase().includes(searchLower)))
+    .slice().sort((a,b) => (a.name||"").localeCompare(b.name||""));
   const isLoading = loading[tab];
 
   return (
@@ -297,11 +304,18 @@ export default function App() {
       {/* ── CONFIRM DELETE ── */}
       {confirmDelete && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 150, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, backdropFilter: "blur(4px)" }}>
-          <div style={{ background: "#100e28", border: "1px solid #2a2560", borderRadius: 16, padding: 28, maxWidth: 340, width: "100%", boxShadow: "0 24px 64px rgba(0,0,0,0.6)", animation: "fadeIn 0.2s ease" }}>
+          <div style={{ background: "#100e28", border: "1px solid #2a2560", borderRadius: 16, padding: 28, maxWidth: 360, width: "100%", boxShadow: "0 24px 64px rgba(0,0,0,0.6)", animation: "fadeIn 0.2s ease" }}>
             <p style={{ color: "#fff", fontWeight: 800, fontSize: 16, margin: "0 0 8px" }}>Remove {isVendors ? "vendor" : "task"}?</p>
-            <p style={{ color: "#6060a0", fontSize: 13, margin: "0 0 24px", lineHeight: 1.6 }}>
-              <span style={{ color: "#a0a0e0" }}>{confirmDelete.title || confirmDelete.name}</span> will be permanently deleted.
+            <p style={{ color: "#6060a0", fontSize: 13, margin: "0 0 14px", lineHeight: 1.6 }}>
+              <span style={{ color: "#a0a0e0" }}>{confirmDelete.title || confirmDelete.name}</span> will be permanently deleted from the sheet. This cannot be undone.
             </p>
+            {(confirmDelete.description || confirmDelete.notes) && (
+              <div style={{ background: "#0a0818", border: "1px solid #1a1640", borderRadius: 8, padding: "10px 12px", marginBottom: 20, maxHeight: 100, overflowY: "auto" }}>
+                <span style={{ display: "block", fontSize: 8, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", color: "#ef4444", marginBottom: 4 }}>⚠ This will be lost</span>
+                {confirmDelete.description && <p style={{ margin: "0 0 4px", fontSize: 11, color: "#8080a0", lineHeight: 1.5 }}>{confirmDelete.description}</p>}
+                {confirmDelete.notes && <p style={{ margin: 0, fontSize: 11, color: "#8080a0", lineHeight: 1.5, fontStyle: "italic" }}>{confirmDelete.notes}</p>}
+              </div>
+            )}
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => isVendors ? handleDeleteVendor(confirmDelete) : handleDeleteTask(confirmDelete)}
                 style={{ flex: 1, padding: "11px", background: "#ef4444", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Delete</button>
@@ -342,15 +356,39 @@ export default function App() {
       {/* ── MAIN ── */}
       <div style={{ maxWidth: 800, margin: "0 auto", padding: "16px 16px 100px" }}>
 
-        {/* Add button row */}
+        {/* Search + View Toggle + Add button row */}
         {!showForm && (
-          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12, flexWrap: "wrap" }}>
+            {/* Search */}
+            <div style={{ flex: "1 1 160px", position: "relative" }}>
+              <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#3a3870", fontSize: 13, pointerEvents: "none" }}>⌕</span>
+              <input value={search} onChange={e => setSearch(e.target.value)}
+                placeholder={isVendors ? "Search vendors..." : "Search tasks..."}
+                style={{ width: "100%", padding: "8px 12px 8px 32px", background: "#0d0b20", color: "#c0c0e0", border: "1px solid #1a1640", borderRadius: 8, fontSize: 13, fontFamily: "inherit", boxSizing: "border-box" }} />
+              {search && (
+                <button onClick={() => setSearch("")} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "transparent", border: "none", color: "#3a3870", cursor: "pointer", fontSize: 14 }}>✕</button>
+              )}
+            </div>
+
+            {/* View toggle (tasks only) */}
+            {!isVendors && (
+              <div style={{ display: "flex", background: "#0d0b20", border: "1px solid #1a1640", borderRadius: 8, overflow: "hidden", flexShrink: 0 }}>
+                {[["list","☰"],["timeline","▤"]].map(([val, icon]) => (
+                  <button key={val} onClick={() => setView(val)} title={val === "list" ? "List view" : "Timeline view"}
+                    style={{ padding: "8px 12px", background: view === val ? tabAcc+"20" : "transparent",
+                      border: "none", color: view === val ? tabAcc : "#3a3860", fontSize: 14, cursor: "pointer" }}>
+                    {icon}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <button onClick={() => isVendors ? startAddVendor() : startAddTask()} className="btn-p"
               style={{ padding: "8px 18px", borderRadius: 8, background: isVendors ? "#e0a040" : tabAcc,
                 color: isVendors ? "#0e0c30" : (g?.text || "#fff"),
-                border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0,
                 boxShadow: `0 4px 12px ${isVendors ? "#e0a04040" : tabAcc+"40"}` }}>
-              + {isVendors ? "Add Vendor" : "Add Task"}
+              + {isVendors ? "Vendor" : "Task"}
             </button>
           </div>
         )}
@@ -376,6 +414,11 @@ export default function App() {
               <div>
                 <div style={LL}>Title *</div>
                 <input value={taskForm.title} onChange={e => setTaskForm(f => ({ ...f, title: e.target.value }))} placeholder="Task name" style={FF} />
+                {!editing && (
+                  <p style={{ margin: "6px 0 0", fontSize: 10.5, color: "#4a4880", lineHeight: 1.5 }}>
+                    💡 Tip: set <strong style={{ color: "#6060a0" }}>Month</strong> to when planning should <em>start</em>, not when the event happens. If Senior Prom needs a venue booked a year out, put that task on this grade's chart even if the event itself is later.
+                  </p>
+                )}
               </div>
               <div>
                 <div style={LL}>Description</div>
@@ -482,7 +525,7 @@ export default function App() {
           </div>
         )}
 
-        {!isLoading && !isVendors && (
+        {!isLoading && !isVendors && view === "list" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {taskList.map(task => {
               const key = `${grade}_${task.title}_${task.month}`;
@@ -526,6 +569,65 @@ export default function App() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* ── TIMELINE VIEW ── */}
+        {!isLoading && !isVendors && view === "timeline" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {MONTHS.map(m => {
+              const monthTasks = taskList.filter(t => t.month === m);
+              if (monthTasks.length === 0) return null;
+              return (
+                <div key={m} style={{ display: "flex", gap: 12 }}>
+                  {/* Month label column */}
+                  <div style={{ flex: "0 0 68px", textAlign: "right", paddingTop: 12 }}>
+                    <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase", color: tabAcc }}>{m.slice(0,3)}</span>
+                  </div>
+                  {/* Timeline track */}
+                  <div style={{ position: "relative", flex: 1, borderLeft: `2px solid ${tabAcc}30`, paddingLeft: 16, paddingBottom: 16 }}>
+                    {monthTasks.map((task, i) => {
+                      const key = `${grade}_${task.title}_${task.month}`;
+                      const sc  = STATUS_CONFIG[task.status];
+                      const isOpen = open === key;
+                      return (
+                        <div key={key} style={{ position: "relative", marginBottom: i === monthTasks.length - 1 ? 0 : 8 }}>
+                          {/* dot on the line */}
+                          <div style={{ position: "absolute", left: -21, top: 16, width: 9, height: 9, borderRadius: "50%", background: sc ? sc.color : tabAcc, border: "2px solid #0a0818", boxShadow: sc ? `0 0 6px ${sc.color}` : "none" }} />
+                          <div className="card-hover" onClick={() => setOpen(isOpen ? null : key)}
+                            style={{ background: "#0d0b20", border: `1px solid ${isOpen ? "#2a2560" : "#16143a"}`, borderRadius: 8, padding: "10px 14px", cursor: "pointer" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <span style={{ flex: 1, color: "#e0deee", fontSize: 13, fontWeight: 600 }}>{task.title}</span>
+                              {task.status && <span style={{ fontSize: 9, color: sc?.color || "#3a3860", fontWeight: 700 }}>{task.status}</span>}
+                            </div>
+                            {isOpen && (
+                              <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #16143a" }}>
+                                {task.description && <CALLOUT color="#10b981" label="Description" value={task.description} />}
+                                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                                  {task.leadtime && <CALLOUT color="#f59e0b" label="Lead Time" value={task.leadtime} flex />}
+                                  {task.contacts && <CALLOUT color="#3b82f6" label="Who to Contact" value={task.contacts} flex />}
+                                </div>
+                                {task.notes && <CALLOUT color="#a78bfa" label="Advisor Notes" value={task.notes} />}
+                                {task.fileurl && <a href={task.fileurl} target="_blank" rel="noreferrer" style={{ display: "block", fontSize: 12, color: "#f0a080", marginBottom: 10, textDecoration: "none", fontWeight: 600 }}>📎 Open Document →</a>}
+                                <div style={{ display: "flex", gap: 8 }} onClick={e => e.stopPropagation()}>
+                                  <button onClick={() => startEditTask(task)} style={{ padding: "5px 14px", background: `${tabAcc}18`, color: tabAcc, border: `1px solid ${tabAcc}40`, borderRadius: 6, fontSize: 10, fontWeight: 700, cursor: "pointer" }}>Edit</button>
+                                  <button onClick={() => setConfirmDelete(task)} style={{ padding: "5px 12px", background: "transparent", color: "#ef4444", border: "1px solid #ef444430", borderRadius: 6, fontSize: 10, cursor: "pointer" }}>Remove</button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+            {taskList.length === 0 && (
+              <div style={{ textAlign: "center", padding: "64px 0", color: "#2a2860" }}>
+                <p style={{ fontSize: 14 }}>No tasks match your view.</p>
+              </div>
+            )}
           </div>
         )}
 
