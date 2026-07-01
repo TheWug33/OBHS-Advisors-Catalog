@@ -328,26 +328,26 @@ export default function App() {
 
       {/* ── TABS ── */}
       <div style={{ background: "#0d0b20", borderBottom: "1px solid #1a1640" }}>
-        <div className="tabscroll" style={{ display: "flex", maxWidth: 800, margin: "0 auto", padding: "0 8px", overflowX: "auto" }}>
+        <div style={{ display: "flex", maxWidth: 800, margin: "0 auto", padding: "0 4px" }}>
           {[9,10,11,12].map(gr => {
             const gc = GRADES[gr]; const active = tab === gr; const tc = gc.tabColor || gc.color;
             return (
               <button key={gr} onClick={() => { setTab(gr); setOpen(null); setShowForm(false); }}
-                style={{ flex: "1 0 auto", padding: "14px 14px 12px", background: "transparent", border: "none",
+                style={{ flex: 1, minWidth: 0, padding: "13px 2px 11px", background: "transparent", border: "none",
                   borderBottom: active ? `2px solid ${tc}` : "2px solid transparent",
                   color: active ? tc : "#3a3860", fontWeight: active ? 700 : 500,
-                  fontSize: 11, cursor: "pointer", letterSpacing: 0.6, textTransform: "uppercase",
-                  transition: "all 0.15s", marginBottom: -1, whiteSpace: "nowrap" }}>
+                  fontSize: "clamp(8.5px, 2.6vw, 11px)", cursor: "pointer", letterSpacing: 0.3, textTransform: "uppercase",
+                  transition: "all 0.15s", marginBottom: -1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {gc.label}
               </button>
             );
           })}
           <button onClick={() => { setTab("vendors"); setOpen(null); setShowForm(false); }}
-            style={{ flex: "1 0 auto", padding: "14px 14px 12px", background: "transparent", border: "none",
+            style={{ flex: 1, minWidth: 0, padding: "13px 2px 11px", background: "transparent", border: "none",
               borderBottom: tab === "vendors" ? "2px solid #e0a040" : "2px solid transparent",
               color: tab === "vendors" ? "#e0a040" : "#3a3860",
-              fontWeight: tab === "vendors" ? 700 : 500, fontSize: 11, cursor: "pointer",
-              letterSpacing: 0.6, textTransform: "uppercase", marginBottom: -1, whiteSpace: "nowrap" }}>
+              fontWeight: tab === "vendors" ? 700 : 500, fontSize: "clamp(8.5px, 2.6vw, 11px)", cursor: "pointer",
+              letterSpacing: 0.3, textTransform: "uppercase", marginBottom: -1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             Vendors
           </button>
         </div>
