@@ -1,14 +1,22 @@
 import { useState, useEffect, useRef } from "react";
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQWFkGqRihgvQA9Dtwv2sNEyJiZzoPHnnWlBQ603mXr2b7k2OF-5a9jVt0iti0yDpC/exec";
+// Fallback URL — can also be set once via the site's settings menu (saved in browser)
+const APPS_SCRIPT_URL_DEFAULT = "PASTE_YOUR_APPS_SCRIPT_URL_HERE";
+function getScriptUrl() {
+  try {
+    const saved = window.localStorage.getItem("obhs_script_url");
+    if (saved && saved.startsWith("https://")) return saved;
+  } catch {}
+  return APPS_SCRIPT_URL_DEFAULT;
+}
 
 const SHEET_URLS = {
   9:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=0&single=true&output=csv",
   10: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=955151150&single=true&output=csv",
   11: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=1311311312&single=true&output=csv",
   12: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=449365991&single=true&output=csv",
-  vendors: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=847121101&single=true&output=csv",
+  vendors: "PASTE_VENDORS_SHEET_CSV_URL_HERE",
 };
 
 const SHEET_NAMES = { 9: "Freshmen", 10: "Sophomores", 11: "Juniors", 12: "Seniors", vendors: "Vendors" };
@@ -53,8 +61,9 @@ function parseCSV(text) {
 }
 
 async function callScript(payload) {
-  if (APPS_SCRIPT_URL === "PASTE_YOUR_APPS_SCRIPT_URL_HERE") throw new Error("Apps Script URL not configured yet.");
-  const res  = await fetch(APPS_SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
+  const url = getScriptUrl();
+  if (url === "PASTE_YOUR_APPS_SCRIPT_URL_HERE") throw new Error("Apps Script URL not set. Open the ⋯ menu → Settings to add it.");
+  const res  = await fetch(url, { method: "POST", body: JSON.stringify(payload) });
   const json = await res.json();
   if (json.status !== "ok") throw new Error(json.message || "Script error");
   return json;
@@ -122,7 +131,12 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [search, setSearch]     = useState("");
   const [view, setView]         = useState("list"); // "list" | "timeline"
+  const [showSettings, setShowSettings] = useState(false);
+  const [settingsUrl, setSettingsUrl]   = useState("");
   const fileInputRef = useRef(null);
+
+  // Current month name for the TODAY marker
+  const nowMonth = new Date().toLocaleString("en-US", { month: "long" });
 
   const isVendors = tab === "vendors";
   const grade     = isVendors ? null : tab;
@@ -243,6 +257,10 @@ export default function App() {
     .slice().sort((a,b) => (a.name||"").localeCompare(b.name||""));
   const isLoading = loading[tab];
 
+  // Status counts for the at-a-glance strip
+  const statusCounts = { Planning: 0, Booked: 0, Complete: 0 };
+  (data[grade] || []).forEach(t => { if (statusCounts[t.status] !== undefined) statusCounts[t.status]++; });
+
   return (
     <div style={{ background: "#0a0818", minHeight: "100vh", width: "100%", fontFamily: "'Inter', system-ui, sans-serif" }}>
       <style>{`
@@ -284,6 +302,8 @@ export default function App() {
                 )}
                 <button onClick={() => { [9,10,11,12,"vendors"].forEach(t => fetchTab(t)); setOpen(null); setMenuOpen(false); }}
                   style={MENU_ITEM}>↻ Refresh Data</button>
+                <button onClick={() => { setSettingsUrl(getScriptUrl() === "PASTE_YOUR_APPS_SCRIPT_URL_HERE" ? "" : getScriptUrl()); setShowSettings(true); setMenuOpen(false); }}
+                  style={MENU_ITEM}>⚙ Settings</button>
               </div>
             </>
           )}
@@ -298,6 +318,35 @@ export default function App() {
           color: saveMsg.type === "ok" ? "#10b981" : "#ef4444",
           padding: "10px 20px", borderRadius: 10, fontSize: 13, fontWeight: 600, zIndex: 200, whiteSpace: "nowrap", boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}>
           {saveMsg.type === "ok" ? "✓ " : "✕ "}{saveMsg.text}
+        </div>
+      )}
+
+      {/* ── SETTINGS MODAL ── */}
+      {showSettings && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 150, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, backdropFilter: "blur(4px)" }}>
+          <div style={{ background: "#100e28", border: "1px solid #2a2560", borderRadius: 16, padding: 28, maxWidth: 420, width: "100%", boxShadow: "0 24px 64px rgba(0,0,0,0.6)", animation: "fadeIn 0.2s ease" }}>
+            <p style={{ color: "#fff", fontWeight: 800, fontSize: 16, margin: "0 0 6px" }}>⚙ Settings</p>
+            <p style={{ color: "#6060a0", fontSize: 12, margin: "0 0 18px", lineHeight: 1.6 }}>
+              Paste your Google Apps Script Web App URL here. It's saved in this browser and survives site updates.
+            </p>
+            <div style={LL}>Apps Script URL</div>
+            <input value={settingsUrl} onChange={e => setSettingsUrl(e.target.value)}
+              placeholder="https://script.google.com/macros/s/.../exec"
+              style={{ ...FF, marginBottom: 16 }} />
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => {
+                  try { window.localStorage.setItem("obhs_script_url", settingsUrl.trim()); } catch {}
+                  setShowSettings(false);
+                  flash("ok", "Settings saved!");
+                }}
+                disabled={!settingsUrl.trim().startsWith("https://")}
+                style={{ flex: 1, padding: "11px", background: settingsUrl.trim().startsWith("https://") ? "#a78bfa" : "#1a1840", color: settingsUrl.trim().startsWith("https://") ? "#0e0c30" : "#4a4870", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                Save
+              </button>
+              <button onClick={() => setShowSettings(false)}
+                style={{ flex: 1, padding: "11px", background: "transparent", color: "#6060a0", border: "1px solid #1a1640", borderRadius: 8, fontSize: 13, cursor: "pointer" }}>Cancel</button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -390,6 +439,21 @@ export default function App() {
                 boxShadow: `0 4px 12px ${isVendors ? "#e0a04040" : tabAcc+"40"}` }}>
               + {isVendors ? "Vendor" : "Task"}
             </button>
+          </div>
+        )}
+
+        {/* ── AT-A-GLANCE STATUS STRIP ── */}
+        {!showForm && !isVendors && !isLoading && (data[grade] || []).length > 0 && (
+          <div style={{ display: "flex", gap: 14, alignItems: "center", marginBottom: 14, paddingLeft: 2 }}>
+            {STATUSES.map(s => {
+              const sc = STATUS_CONFIG[s];
+              return (
+                <span key={s} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#5a5890" }}>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: sc.color, boxShadow: `0 0 5px ${sc.color}60` }} />
+                  {statusCounts[s]} {s}
+                </span>
+              );
+            })}
           </div>
         )}
 
@@ -535,6 +599,9 @@ export default function App() {
                   {/* Month header */}
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, paddingLeft: 2 }}>
                     <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", color: tabAcc }}>{m}</span>
+                    {m === nowMonth && (
+                      <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", color: "#10b981", background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.35)", borderRadius: 20, padding: "2px 8px", boxShadow: "0 0 10px rgba(16,185,129,0.25)" }}>● Today</span>
+                    )}
                     <div style={{ flex: 1, height: 1, background: `${tabAcc}20` }} />
                     <span style={{ fontSize: 10, color: "#3a3860", fontWeight: 600 }}>{monthTasks.length}</span>
                   </div>
