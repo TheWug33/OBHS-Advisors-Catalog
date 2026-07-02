@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyaHQI1ISwwH6sE4-TWEDrr9k7xMrjO4h8vycNJ3nXTlSunzT7MoBXSWbfYR9MHRlpZ/exec";
+const APPS_SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_URL_HERE";
 
 const SHEET_URLS = {
   9:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=0&single=true&output=csv",
   10: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=955151150&single=true&output=csv",
   11: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=1311311312&single=true&output=csv",
   12: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=449365991&single=true&output=csv",
-  vendors: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=847121101&single=true&output=csv",
+  vendors: "PASTE_VENDORS_SHEET_CSV_URL_HERE",
 };
 
 const SHEET_NAMES = { 9: "Freshmen", 10: "Sophomores", 11: "Juniors", 12: "Seniors", vendors: "Vendors" };
@@ -526,46 +526,62 @@ export default function App() {
         )}
 
         {!isLoading && !isVendors && view === "list" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {taskList.map(task => {
-              const key = `${grade}_${task.title}_${task.month}`;
-              const sc  = STATUS_CONFIG[task.status];
-              const hasDetail = task.description || task.leadtime || task.contacts || task.notes || task.fileurl;
-              const isOpen = open === key;
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {MONTHS.map(m => {
+              const monthTasks = taskList.filter(t => t.month === m);
+              if (monthTasks.length === 0) return null;
               return (
-                <div key={key} className="card-hover" style={{ background: "#0d0b20", borderRadius: 10, border: `1px solid ${isOpen ? "#2a2560" : "#16143a"}`, borderLeft: `3px solid ${tabAcc}`, overflow: "hidden", transition: "all 0.15s" }}>
-                  <div onClick={() => setOpen(isOpen ? null : key)} style={{ display: "flex", alignItems: "center", padding: "14px 16px", cursor: "pointer", gap: 11 }}>
-                    {/* Status dot */}
-                    <div title={task.status} style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: sc ? sc.color : "#3a3860", boxShadow: sc ? `0 0 6px ${sc.color}80` : "none" }} />
-                    {/* Month */}
-                    <span style={{ background: `${tabAcc}15`, color: tabAcc, borderRadius: 6, padding: "3px 9px", fontSize: 9, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase", whiteSpace: "nowrap", minWidth: 70, textAlign: "center" }}>{task.month}</span>
-                    {/* Title */}
-                    <span style={{ flex: 1, color: "#e0deee", fontSize: 14, fontWeight: 600, lineHeight: 1.3 }}>{task.title}</span>
-                    <span style={{ color: "#2a2860", fontSize: 10 }}>{isOpen ? "▲" : "▼"}</span>
+                <div key={m}>
+                  {/* Month header */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, paddingLeft: 2 }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", color: tabAcc }}>{m}</span>
+                    <div style={{ flex: 1, height: 1, background: `${tabAcc}20` }} />
+                    <span style={{ fontSize: 10, color: "#3a3860", fontWeight: 600 }}>{monthTasks.length}</span>
                   </div>
+                  {/* Events in this month */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {monthTasks.map(task => {
+                      const key = `${grade}_${task.title}_${task.month}`;
+                      const sc  = STATUS_CONFIG[task.status];
+                      const hasDetail = task.description || task.leadtime || task.contacts || task.notes || task.fileurl;
+                      const isOpen = open === key;
+                      return (
+                        <div key={key} className="card-hover" style={{ background: "#0d0b20", borderRadius: 10, border: `1px solid ${isOpen ? "#2a2560" : "#16143a"}`, borderLeft: `3px solid ${tabAcc}`, overflow: "hidden", transition: "all 0.15s" }}>
+                          <div onClick={() => setOpen(isOpen ? null : key)} style={{ display: "flex", alignItems: "center", padding: "14px 16px", cursor: "pointer", gap: 11 }}>
+                            {/* Status dot */}
+                            <div title={task.status} style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: sc ? sc.color : "#3a3860", boxShadow: sc ? `0 0 6px ${sc.color}80` : "none" }} />
+                            {/* Title */}
+                            <span style={{ flex: 1, color: "#e0deee", fontSize: 14, fontWeight: 600, lineHeight: 1.3 }}>{task.title}</span>
+                            {task.status && <span style={{ fontSize: 9, color: sc?.color || "#3a3860", fontWeight: 700 }}>{task.status}</span>}
+                            <span style={{ color: "#2a2860", fontSize: 10 }}>{isOpen ? "▲" : "▼"}</span>
+                          </div>
 
-                  {isOpen && (
-                    <div style={{ borderTop: "1px solid #16143a", padding: "16px", background: "#0a0818", animation: "fadeIn 0.15s ease" }}>
-                      {task.description && <CALLOUT color="#10b981" label="Description" value={task.description} />}
-                      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                        {task.leadtime && <CALLOUT color="#f59e0b" label="Lead Time" value={task.leadtime} flex />}
-                        {task.contacts && <CALLOUT color="#3b82f6" label="Who to Contact" value={task.contacts} flex />}
-                      </div>
-                      {task.notes && <CALLOUT color="#a78bfa" label="Advisor Notes" value={task.notes} />}
-                      {task.fileurl && (
-                        <div style={{ background: "rgba(240,128,96,0.08)", border: "1px solid rgba(240,128,96,0.25)", borderLeft: "3px solid #f08060", borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
-                          <span style={{ display: "block", fontSize: 8, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", color: "#f08060", marginBottom: 6 }}>Attached File</span>
-                          <a href={task.fileurl} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: "#f0a080", textDecoration: "none", fontWeight: 600 }}>Open Document →</a>
+                          {isOpen && (
+                            <div style={{ borderTop: "1px solid #16143a", padding: "16px", background: "#0a0818", animation: "fadeIn 0.15s ease" }}>
+                              {task.description && <CALLOUT color="#10b981" label="Description" value={task.description} />}
+                              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                                {task.leadtime && <CALLOUT color="#f59e0b" label="Lead Time" value={task.leadtime} flex />}
+                                {task.contacts && <CALLOUT color="#3b82f6" label="Who to Contact" value={task.contacts} flex />}
+                              </div>
+                              {task.notes && <CALLOUT color="#a78bfa" label="Advisor Notes" value={task.notes} />}
+                              {task.fileurl && (
+                                <div style={{ background: "rgba(240,128,96,0.08)", border: "1px solid rgba(240,128,96,0.25)", borderLeft: "3px solid #f08060", borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
+                                  <span style={{ display: "block", fontSize: 8, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", color: "#f08060", marginBottom: 6 }}>Attached File</span>
+                                  <a href={task.fileurl} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: "#f0a080", textDecoration: "none", fontWeight: 600 }}>Open Document →</a>
+                                </div>
+                              )}
+                              {!hasDetail && <p style={{ margin: "0 0 14px", fontSize: 12, color: "#2a2860", fontStyle: "italic" }}>No details yet — tap Edit to add.</p>}
+                              {task.editedby && <p style={{ margin: "0 0 14px", fontSize: 10, color: "#3a3860" }}>✍ Last edited by <span style={{ color: "#6060a0" }}>{task.editedby}</span></p>}
+                              <div style={{ display: "flex", gap: 8 }}>
+                                <button onClick={() => startEditTask(task)} style={{ padding: "6px 16px", background: `${tabAcc}18`, color: tabAcc, border: `1px solid ${tabAcc}40`, borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Edit</button>
+                                <button onClick={() => setConfirmDelete(task)} style={{ padding: "6px 14px", background: "transparent", color: "#ef4444", border: "1px solid #ef444430", borderRadius: 6, fontSize: 11, cursor: "pointer" }}>Remove</button>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      )}
-                      {!hasDetail && <p style={{ margin: "0 0 14px", fontSize: 12, color: "#2a2860", fontStyle: "italic" }}>No details yet — tap Edit to add.</p>}
-                      {task.editedby && <p style={{ margin: "0 0 14px", fontSize: 10, color: "#3a3860" }}>✍ Last edited by <span style={{ color: "#6060a0" }}>{task.editedby}</span></p>}
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button onClick={() => startEditTask(task)} style={{ padding: "6px 16px", background: `${tabAcc}18`, color: tabAcc, border: `1px solid ${tabAcc}40`, borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Edit</button>
-                        <button onClick={() => setConfirmDelete(task)} style={{ padding: "6px 14px", background: "transparent", color: "#ef4444", border: "1px solid #ef444430", borderRadius: 6, fontSize: 11, cursor: "pointer" }}>Remove</button>
-                      </div>
-                    </div>
-                  )}
+                      );
+                    })}
+                  </div>
                 </div>
               );
             })}
