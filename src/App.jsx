@@ -286,8 +286,15 @@ export default function App() {
       `}</style>
 
       {/* ── NAV ── */}
-      <nav style={{ background: "rgba(10,8,24,0.95)", borderBottom: "1px solid #1a1640", padding: "0 20px", height: 56, display: "flex", alignItems: "center", gap: 10, position: "sticky", top: 0, zIndex: 100, backdropFilter: "blur(12px)" }}>
-        <img src="/icon-192.png" alt="OBHS" style={{ width: 32, height: 32, borderRadius: 8, boxShadow: `0 0 12px ${tabAcc}30`, transition: "box-shadow 0.3s" }} />
+      <nav style={{
+        background: "rgba(10,8,24,0.95)", borderBottom: "1px solid #1a1640",
+        padding: "calc(env(safe-area-inset-top, 0px) + 10px) 20px 10px",
+        display: "flex", alignItems: "center", gap: 10,
+        position: "sticky", top: 0, zIndex: 100, backdropFilter: "blur(12px)"
+      }}>
+        <div style={{ width: 28, height: 28, borderRadius: 7, overflow: "hidden", flexShrink: 0, boxShadow: `0 0 10px ${tabAcc}25` }}>
+          <img src="/icon-192.png" alt="OBHS" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        </div>
         <div style={{ color: "#fff", fontWeight: 800, fontSize: 13, letterSpacing: 1.5 }}>OBHS</div>
         <div style={{ flex: 1 }} />
 
