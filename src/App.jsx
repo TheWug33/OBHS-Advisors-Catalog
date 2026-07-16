@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
 // Fallback URL — can also be set once via the site's settings menu (saved in browser)
-const APPS_SCRIPT_URL_DEFAULT = "https://script.google.com/macros/s/AKfycbwvErTJLpGK6v2543Y6_yWawsrD0sVioGbPquWWzwn9iKfK7LIv-8ERQs0Azex7HIQ/exec";
+const APPS_SCRIPT_URL_DEFAULT = "PASTE_YOUR_APPS_SCRIPT_URL_HERE";
 function getScriptUrl() {
   try {
     const saved = window.localStorage.getItem("obhs_script_url");
@@ -16,7 +16,7 @@ const SHEET_URLS = {
   10: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=955151150&single=true&output=csv",
   11: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=1311311312&single=true&output=csv",
   12: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=449365991&single=true&output=csv",
-  vendors: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGHy4-6p1j_bOVwekZA4jCK4lSSGYdIgPaFQhrZ77kXC8XNUF5VlmkdB_V_BGiShSrbiPh12W7Imz8/pub?gid=847121101&single=true&output=csv",
+  vendors: "PASTE_VENDORS_SHEET_CSV_URL_HERE",
 };
 
 const SHEET_NAMES = { 9: "Freshmen", 10: "Sophomores", 11: "Juniors", 12: "Seniors", vendors: "Vendors" };
@@ -265,26 +265,29 @@ export default function App() {
     <div style={{ background: "#0a0818", minHeight: "100vh", width: "100%", fontFamily: "'Inter', system-ui, sans-serif" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; background: #0a0818; }
-        body { overflow-x: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; background: #0a0818; overscroll-behavior-y: none; }
+        body { overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+        button { touch-action: manipulation; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-thumb { background: #2a2560; border-radius: 2px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes popIn { from { opacity:0; transform:scale(0.97); } to { opacity:1; transform:scale(1); } }
         .card-hover:hover { border-color: #2e2a6a !important; }
+        .card-hover:active { transform: scale(0.99); transition: transform 0.08s; }
         .btn-p { transition: opacity 0.15s, transform 0.1s; }
         .btn-p:hover { opacity: 0.88; }
-        .btn-p:active { transform: scale(0.98); }
+        .btn-p:active { transform: scale(0.96); }
+        .tab-press { transition: transform 0.1s; }
+        .tab-press:active { transform: scale(0.9); }
         .tabscroll::-webkit-scrollbar { display: none; }
         .tabscroll { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
       {/* ── NAV ── */}
-      <nav style={{ background: "rgba(10,8,24,0.95)", borderBottom: "1px solid #1a1640", padding: "0 20px", height: 56, display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 0, zIndex: 100, backdropFilter: "blur(12px)" }}>
-        <div style={{ width: 30, height: 30, borderRadius: 8, background: `linear-gradient(135deg, ${tabAcc}30, ${tabAcc}10)`, border: `1px solid ${tabAcc}40`, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.3s" }}>
-          <div style={{ width: 7, height: 7, borderRadius: "50%", background: tabAcc, boxShadow: `0 0 8px ${tabAcc}` }} />
-        </div>
+      <nav style={{ background: "rgba(10,8,24,0.95)", borderBottom: "1px solid #1a1640", padding: "0 20px", height: 56, display: "flex", alignItems: "center", gap: 10, position: "sticky", top: 0, zIndex: 100, backdropFilter: "blur(12px)" }}>
+        <img src="/icon-192.png" alt="OBHS" style={{ width: 32, height: 32, borderRadius: 8, boxShadow: `0 0 12px ${tabAcc}30`, transition: "box-shadow 0.3s" }} />
         <div style={{ color: "#fff", fontWeight: 800, fontSize: 13, letterSpacing: 1.5 }}>OBHS</div>
         <div style={{ flex: 1 }} />
 
@@ -375,35 +378,8 @@ export default function App() {
         </div>
       )}
 
-      {/* ── TABS ── */}
-      <div style={{ background: "#0d0b20", borderBottom: "1px solid #1a1640" }}>
-        <div style={{ display: "flex", maxWidth: 800, margin: "0 auto", padding: "0 4px" }}>
-          {[9,10,11,12].map(gr => {
-            const gc = GRADES[gr]; const active = tab === gr; const tc = gc.tabColor || gc.color;
-            return (
-              <button key={gr} onClick={() => { setTab(gr); setOpen(null); setShowForm(false); }}
-                style={{ flex: 1, minWidth: 0, padding: "13px 2px 11px", background: "transparent", border: "none",
-                  borderBottom: active ? `2px solid ${tc}` : "2px solid transparent",
-                  color: active ? tc : "#3a3860", fontWeight: active ? 700 : 500,
-                  fontSize: "clamp(8.5px, 2.6vw, 11px)", cursor: "pointer", letterSpacing: 0.3, textTransform: "uppercase",
-                  transition: "all 0.15s", marginBottom: -1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {gc.label}
-              </button>
-            );
-          })}
-          <button onClick={() => { setTab("vendors"); setOpen(null); setShowForm(false); }}
-            style={{ flex: 1, minWidth: 0, padding: "13px 2px 11px", background: "transparent", border: "none",
-              borderBottom: tab === "vendors" ? "2px solid #e0a040" : "2px solid transparent",
-              color: tab === "vendors" ? "#e0a040" : "#3a3860",
-              fontWeight: tab === "vendors" ? 700 : 500, fontSize: "clamp(8.5px, 2.6vw, 11px)", cursor: "pointer",
-              letterSpacing: 0.3, textTransform: "uppercase", marginBottom: -1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            Vendors
-          </button>
-        </div>
-      </div>
-
       {/* ── MAIN ── */}
-      <div style={{ maxWidth: 800, margin: "0 auto", padding: "16px 16px 100px" }}>
+      <div style={{ maxWidth: 800, margin: "0 auto", padding: "16px 16px 110px" }}>
 
         {/* Search + View Toggle + Add button row */}
         {!showForm && (
@@ -755,11 +731,42 @@ export default function App() {
         )}
       </div>
 
-      {/* ── FOOTER ── */}
-      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "rgba(10,8,24,0.97)", borderTop: "1px solid #16143a", padding: "10px 20px", display: "flex", justifyContent: "center", alignItems: "center", backdropFilter: "blur(12px)" }}>
-        <span style={{ color: "#2a2860", fontSize: 11 }}>
-          {isLoading ? "Loading…" : isVendors ? `${vendorList.length} vendors` : `${taskList.length} tasks · ${g?.label}`}
-        </span>
+      {/* ── BOTTOM TAB BAR (native app style) ── */}
+      <div style={{
+        position: "fixed", bottom: 0, left: 0, right: 0,
+        background: "rgba(13,11,32,0.92)",
+        borderTop: "1px solid #1a1640",
+        backdropFilter: "blur(20px)",
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        zIndex: 80,
+      }}>
+        <div style={{ display: "flex", maxWidth: 800, margin: "0 auto" }}>
+          {[
+            { key: 9,  icon: "①", label: "Gr 9" },
+            { key: 10, icon: "②", label: "Gr 10" },
+            { key: 11, icon: "③", label: "Gr 11" },
+            { key: 12, icon: "④", label: "Gr 12" },
+            { key: "vendors", icon: "🏪", label: "Vendors" },
+          ].map(item => {
+            const active = tab === item.key;
+            const gc = item.key !== "vendors" ? GRADES[item.key] : null;
+            const tc = active ? (gc ? (gc.tabColor || gc.color) : "#e0a040") : "#3a3860";
+            return (
+              <button key={item.key}
+                className="tab-press"
+                onClick={() => { setTab(item.key); setOpen(null); setShowForm(false); }}
+                style={{
+                  flex: 1, background: "transparent", border: "none", cursor: "pointer",
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
+                  padding: "9px 2px 8px", color: tc, transition: "color 0.15s",
+                }}>
+                <span style={{ fontSize: 16, lineHeight: 1, opacity: active ? 1 : 0.55, transform: active ? "scale(1.1)" : "scale(1)", transition: "all 0.15s" }}>{item.icon}</span>
+                <span style={{ fontSize: 9.5, fontWeight: active ? 800 : 500, letterSpacing: 0.2 }}>{item.label}</span>
+                {active && <span style={{ width: 4, height: 4, borderRadius: "50%", background: tc, marginTop: 1, boxShadow: `0 0 6px ${tc}` }} />}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
