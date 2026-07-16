@@ -3,14 +3,54 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>OBHS Class Advisor Catalog</title>
+    <title>OBHS Advisor Catalog</title>
+
+    <!-- PWA / Add to Home Screen -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0a0818" />
+
+    <!-- iOS-specific: makes it launch full-screen with no browser chrome -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="OBHS Catalog" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Android -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+
     <style>
       html, body { margin: 0; padding: 0; width: 100%; min-height: 100%; background: #0a0818; -webkit-text-size-adjust: 100%; }
       #root { width: 100%; min-height: 100vh; }
+
+      /* Splash-style loading state before React mounts */
+      #splash {
+        position: fixed; inset: 0; background: #0a0818;
+        display: flex; align-items: center; justify-content: center;
+        z-index: 9999; transition: opacity 0.3s ease;
+      }
+      #splash img {
+        width: 120px; height: 120px; border-radius: 24px;
+        animation: splashPulse 1.6s ease-in-out infinite;
+        box-shadow: 0 0 50px rgba(167,139,250,0.35);
+      }
+      @keyframes splashPulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.9; } }
     </style>
   </head>
   <body>
+    <div id="splash"><img src="/icon-512.png" alt="OBHS" /></div>
     <div id="root"></div>
+    <script>
+      // Hide splash once the page has fully loaded (React has mounted)
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          var splash = document.getElementById('splash');
+          if (splash) {
+            splash.style.opacity = '0';
+            setTimeout(function() { splash.remove(); }, 300);
+          }
+        }, 250);
+      });
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
