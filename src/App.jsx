@@ -20,6 +20,10 @@ const SHEET_URLS = {
 };
 
 const SHEET_NAMES = { 9: "Freshmen", 10: "Sophomores", 11: "Juniors", 12: "Seniors", vendors: "Vendors" };
+
+// Shared Google Calendar — advisors with edit access can add events directly;
+// others can subscribe via the calendar's public iCal link from their own Apple/Outlook calendar.
+const CALENDAR_ID = "5c02222fcf18436f487aec3892dd07593a31755a1e117357026a5471aba902d5@group.calendar.google.com";
 const MONTHS = ["August","September","October","November","December","January","February","March","April","May","June","July"];
 
 const GRADES = {
@@ -138,10 +142,11 @@ export default function App() {
   // Current month name for the TODAY marker
   const nowMonth = new Date().toLocaleString("en-US", { month: "long" });
 
-  const isVendors = tab === "vendors";
-  const grade     = isVendors ? null : tab;
-  const g         = grade ? GRADES[grade] : null;
-  const tabAcc    = g ? (g.tabColor || g.color) : "#e0a040";
+  const isVendors  = tab === "vendors";
+  const isCalendar = tab === "calendar";
+  const grade      = (isVendors || isCalendar) ? null : tab;
+  const g          = grade ? GRADES[grade] : null;
+  const tabAcc     = g ? (g.tabColor || g.color) : isCalendar ? "#3b82f6" : "#e0a040";
 
   async function fetchTab(t) {
     setLoading(prev => ({ ...prev, [t]: true }));
@@ -389,7 +394,7 @@ export default function App() {
       <div style={{ maxWidth: 800, margin: "0 auto", padding: "16px 16px 110px" }}>
 
         {/* Search + View Toggle + Add button row */}
-        {!showForm && (
+        {!showForm && !isCalendar && (
           <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12, flexWrap: "wrap" }}>
             {/* Search */}
             <div style={{ flex: "1 1 160px", position: "relative" }}>
@@ -736,6 +741,38 @@ export default function App() {
             })}
           </div>
         )}
+
+        {/* ── CALENDAR VIEW ── */}
+        {isCalendar && (
+          <div>
+            <div style={{ background: "#0d0b20", border: "1px solid #1a1640", borderRadius: 14, padding: 16, marginBottom: 16 }}>
+              <p style={{ margin: "0 0 6px", color: "#e0deee", fontSize: 14, fontWeight: 700 }}>📅 Shared OBHS Advisor Calendar</p>
+              <p style={{ margin: 0, color: "#6060a0", fontSize: 12, lineHeight: 1.6 }}>
+                Advisors with edit access can add events directly below. On your own phone, subscribe to this calendar from Apple Calendar or Outlook to see updates automatically.
+              </p>
+              <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+                <a href={`https://calendar.google.com/calendar/u/0?cid=${encodeURIComponent(CALENDAR_ID)}`} target="_blank" rel="noreferrer"
+                  style={{ fontSize: 11, fontWeight: 700, color: "#3b82f6", background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.3)", borderRadius: 6, padding: "7px 14px", textDecoration: "none" }}>
+                  Open in Google Calendar
+                </a>
+                <a href={`webcal://calendar.google.com/calendar/ical/${encodeURIComponent(CALENDAR_ID)}/public/basic.ics`}
+                  style={{ fontSize: 11, fontWeight: 700, color: "#a78bfa", background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.3)", borderRadius: 6, padding: "7px 14px", textDecoration: "none" }}>
+                  Subscribe (Apple / Outlook)
+                </a>
+              </div>
+            </div>
+
+            <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid #1a1640", background: "#0d0b20" }}>
+              <iframe
+                title="OBHS Advisor Calendar"
+                src={`https://calendar.google.com/calendar/embed?src=${encodeURIComponent(CALENDAR_ID)}&ctz=America%2FNew_York&mode=MONTH&showTitle=0&showNav=1&showPrint=0&showTabs=0&showCalendars=0&showTz=0&bgcolor=%230a0818&color=%23a78bfa`}
+                style={{ width: "100%", height: 600, border: "none", display: "block" }}
+                frameBorder="0"
+                scrolling="no"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── BOTTOM TAB BAR (native app style) ── */}
@@ -754,10 +791,11 @@ export default function App() {
             { key: 11, icon: "③", label: "Gr 11" },
             { key: 12, icon: "④", label: "Gr 12" },
             { key: "vendors", icon: "🏪", label: "Vendors" },
+            { key: "calendar", icon: "📅", label: "Calendar" },
           ].map(item => {
             const active = tab === item.key;
-            const gc = item.key !== "vendors" ? GRADES[item.key] : null;
-            const tc = active ? (gc ? (gc.tabColor || gc.color) : "#e0a040") : "#3a3860";
+            const gc = (item.key !== "vendors" && item.key !== "calendar") ? GRADES[item.key] : null;
+            const tc = active ? (gc ? (gc.tabColor || gc.color) : item.key === "calendar" ? "#3b82f6" : "#e0a040") : "#3a3860";
             return (
               <button key={item.key}
                 className="tab-press"
@@ -765,10 +803,10 @@ export default function App() {
                 style={{
                   flex: 1, background: "transparent", border: "none", cursor: "pointer",
                   display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
-                  padding: "9px 2px 8px", color: tc, transition: "color 0.15s",
+                  padding: "9px 1px 8px", color: tc, transition: "color 0.15s", minWidth: 0,
                 }}>
-                <span style={{ fontSize: 16, lineHeight: 1, opacity: active ? 1 : 0.55, transform: active ? "scale(1.1)" : "scale(1)", transition: "all 0.15s" }}>{item.icon}</span>
-                <span style={{ fontSize: 9.5, fontWeight: active ? 800 : 500, letterSpacing: 0.2 }}>{item.label}</span>
+                <span style={{ fontSize: 15, lineHeight: 1, opacity: active ? 1 : 0.55, transform: active ? "scale(1.1)" : "scale(1)", transition: "all 0.15s" }}>{item.icon}</span>
+                <span style={{ fontSize: 8.5, fontWeight: active ? 800 : 500, letterSpacing: 0.1, whiteSpace: "nowrap" }}>{item.label}</span>
                 {active && <span style={{ width: 4, height: 4, borderRadius: "50%", background: tc, marginTop: 1, boxShadow: `0 0 6px ${tc}` }} />}
               </button>
             );
