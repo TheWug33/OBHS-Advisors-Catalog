@@ -297,10 +297,17 @@ export default function App() {
         display: "flex", alignItems: "center", gap: 10,
         position: "sticky", top: 0, zIndex: 100, backdropFilter: "blur(12px)"
       }}>
-        <div style={{ width: 28, height: 28, borderRadius: 7, overflow: "hidden", flexShrink: 0, boxShadow: `0 0 10px ${tabAcc}25` }}>
-          <img src="/icon-192.png" alt="OBHS" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-        </div>
-        <div style={{ color: "#fff", fontWeight: 800, fontSize: 13, letterSpacing: 1.5 }}>OBHS</div>
+        <button
+          onClick={() => { setTab(9); setOpen(null); setShowForm(false); setSearch(""); }}
+          className="tab-press"
+          style={{ display: "flex", alignItems: "center", gap: 10, background: "transparent", border: "none", cursor: "pointer", padding: 0 }}
+          title="Back to Grade 9 home"
+        >
+          <div style={{ width: 28, height: 28, borderRadius: 7, overflow: "hidden", flexShrink: 0, boxShadow: `0 0 10px ${tabAcc}25` }}>
+            <img src="/icon-192.png" alt="OBHS" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          </div>
+          <div style={{ color: "#fff", fontWeight: 800, fontSize: 13, letterSpacing: 1.5 }}>OBHS</div>
+        </button>
         <div style={{ flex: 1 }} />
 
         {/* Overflow menu */}
