@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
 // Fallback URL — can also be set once via the site's settings menu (saved in browser)
-const APPS_SCRIPT_URL_DEFAULT = "https://script.google.com/macros/s/AKfycbxSy2l_v4l7m2PsmTQndWvfE3P9CvDrCukASR8Kdtf_kqMTsj4-juJ2F1D_FY8_ZOqo/exec";
+const APPS_SCRIPT_URL_DEFAULT = "https://script.google.com/macros/s/AKfycby9pgOGITsZAr-6qqi9fp9vQQWnIapU23K_K7Uz220RF6lmfdbdNTPEyEN-3DA-TUjw/exec";
 function getScriptUrl() {
   try {
     const saved = window.localStorage.getItem("obhs_script_url");
