@@ -137,6 +137,9 @@ export default function App() {
   const [view, setView]         = useState("list"); // "list" | "timeline"
   const [showSettings, setShowSettings] = useState(false);
   const [settingsUrl, setSettingsUrl]   = useState("");
+  const [showEventForm, setShowEventForm] = useState(false);
+  const [eventForm, setEventForm] = useState({ title: "", date: "", startTime: "", endTime: "", description: "" });
+  const [savingEvent, setSavingEvent] = useState(false);
   const fileInputRef = useRef(null);
 
   // Current month name for the TODAY marker
@@ -251,6 +254,28 @@ export default function App() {
       setOpen(null); flash("ok", "Removed!");
     } catch (e) { flash("err", e.message); }
     finally { setSaving(false); }
+  }
+
+  async function handleAddEvent() {
+    if (!eventForm.title.trim() || !eventForm.date) return;
+    setSavingEvent(true);
+    try {
+      await callScript({
+        action: "addCalendarEvent",
+        title: eventForm.title,
+        date: eventForm.date,
+        startTime: eventForm.startTime,
+        endTime: eventForm.endTime,
+        description: eventForm.description,
+      });
+      flash("ok", "Event added to calendar!");
+      setEventForm({ title: "", date: "", startTime: "", endTime: "", description: "" });
+      setShowEventForm(false);
+    } catch (e) {
+      flash("err", e.message);
+    } finally {
+      setSavingEvent(false);
+    }
   }
 
   const searchLower = search.trim().toLowerCase();
@@ -753,10 +778,58 @@ export default function App() {
         {isCalendar && (
           <div>
             <div style={{ background: "#0d0b20", border: "1px solid #1a1640", borderRadius: 14, padding: 16, marginBottom: 16 }}>
-              <p style={{ margin: "0 0 6px", color: "#e0deee", fontSize: 14, fontWeight: 700 }}>📅 Shared OBHS Advisor Calendar</p>
-              <p style={{ margin: 0, color: "#6060a0", fontSize: 12, lineHeight: 1.6 }}>
-                Advisors with edit access can add events directly below. On your own phone, subscribe to this calendar from Apple Calendar or Outlook to see updates automatically.
-              </p>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+                <div>
+                  <p style={{ margin: "0 0 6px", color: "#e0deee", fontSize: 14, fontWeight: 700 }}>📅 Shared OBHS Advisor Calendar</p>
+                  <p style={{ margin: 0, color: "#6060a0", fontSize: 12, lineHeight: 1.6 }}>
+                    Add an event below, or subscribe from Apple Calendar / Outlook to see updates automatically.
+                  </p>
+                </div>
+                <button onClick={() => setShowEventForm(s => !s)} className="btn-p"
+                  style={{ padding: "8px 16px", borderRadius: 8, background: "#3b82f6", color: "#fff",
+                    border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
+                  {showEventForm ? "Cancel" : "+ Event"}
+                </button>
+              </div>
+
+              {showEventForm && (
+                <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #1a1640", display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div>
+                    <div style={LL}>Event Title *</div>
+                    <input value={eventForm.title} onChange={e => setEventForm(f => ({ ...f, title: e.target.value }))}
+                      placeholder="e.g. Homecoming Committee Meeting" style={FF} />
+                  </div>
+                  <div>
+                    <div style={LL}>Date *</div>
+                    <input type="date" value={eventForm.date} onChange={e => setEventForm(f => ({ ...f, date: e.target.value }))} style={FF} />
+                  </div>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={LL}>Start Time</div>
+                      <input type="time" value={eventForm.startTime} onChange={e => setEventForm(f => ({ ...f, startTime: e.target.value }))} style={FF} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={LL}>End Time</div>
+                      <input type="time" value={eventForm.endTime} onChange={e => setEventForm(f => ({ ...f, endTime: e.target.value }))} style={FF} />
+                    </div>
+                  </div>
+                  <div>
+                    <div style={LL}>Description</div>
+                    <textarea value={eventForm.description} onChange={e => setEventForm(f => ({ ...f, description: e.target.value }))}
+                      rows={2} placeholder="Optional details..." style={{ ...FF, resize: "vertical" }} />
+                  </div>
+                  <p style={{ margin: 0, fontSize: 10.5, color: "#4a4880" }}>
+                    Leave both times blank for an all-day event.
+                  </p>
+                  <button onClick={handleAddEvent} disabled={savingEvent || !eventForm.title.trim() || !eventForm.date} className="btn-p"
+                    style={{ padding: "10px 20px", background: savingEvent ? "#1a1840" : "#3b82f6", color: "#fff",
+                      border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700,
+                      cursor: savingEvent ? "wait" : "pointer" }}>
+                    {savingEvent ? "Adding…" : "Add to Calendar"}
+                  </button>
+                </div>
+              )}
+
               <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
                 <a href={`https://calendar.google.com/calendar/u/0?cid=${encodeURIComponent(CALENDAR_ID)}`} target="_blank" rel="noreferrer"
                   style={{ fontSize: 11, fontWeight: 700, color: "#3b82f6", background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.3)", borderRadius: 6, padding: "7px 14px", textDecoration: "none" }}>
