@@ -602,14 +602,14 @@ export default function App() {
         )}
 
         {/* ── TASK CARDS ── */}
-        {!isLoading && !isVendors && taskList.length === 0 && (
+        {!isLoading && !isVendors && !isCalendar && taskList.length === 0 && (
           <div style={{ textAlign: "center", padding: "64px 0", color: "#2a2860" }}>
             <div style={{ fontSize: 40, marginBottom: 12, opacity: 0.3 }}>📋</div>
             <p style={{ fontSize: 14 }}>No tasks yet. Add one to get started.</p>
           </div>
         )}
 
-        {!isLoading && !isVendors && view === "list" && (
+        {!isLoading && !isVendors && !isCalendar && view === "list" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             {MONTHS.map(m => {
               const monthTasks = taskList.filter(t => t.month === m);
@@ -676,7 +676,7 @@ export default function App() {
         )}
 
         {/* ── TIMELINE VIEW ── */}
-        {!isLoading && !isVendors && view === "timeline" && (
+        {!isLoading && !isVendors && !isCalendar && view === "timeline" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {MONTHS.map(m => {
               const monthTasks = taskList.filter(t => t.month === m);
@@ -778,13 +778,8 @@ export default function App() {
         {isCalendar && (
           <div>
             <div style={{ background: "#0d0b20", border: "1px solid #1a1640", borderRadius: 14, padding: 16, marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
-                <div>
-                  <p style={{ margin: "0 0 6px", color: "#e0deee", fontSize: 14, fontWeight: 700 }}>📅 Shared OBHS Advisor Calendar</p>
-                  <p style={{ margin: 0, color: "#6060a0", fontSize: 12, lineHeight: 1.6 }}>
-                    Add an event below, or subscribe from Apple Calendar / Outlook to see updates automatically.
-                  </p>
-                </div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                <p style={{ margin: 0, color: "#e0deee", fontSize: 14, fontWeight: 700 }}>📅 Advisor Calendar</p>
                 <button onClick={() => setShowEventForm(s => !s)} className="btn-p"
                   style={{ padding: "8px 16px", borderRadius: 8, background: "#3b82f6", color: "#fff",
                     border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
@@ -832,12 +827,12 @@ export default function App() {
 
               <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
                 <a href={`https://calendar.google.com/calendar/u/0?cid=${encodeURIComponent(CALENDAR_ID)}`} target="_blank" rel="noreferrer"
-                  style={{ fontSize: 11, fontWeight: 700, color: "#3b82f6", background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.3)", borderRadius: 6, padding: "7px 14px", textDecoration: "none" }}>
+                  style={{ fontSize: 10.5, fontWeight: 600, color: "#6d9fdb", background: "transparent", border: "1px solid rgba(59,130,246,0.25)", borderRadius: 6, padding: "6px 12px", textDecoration: "none" }}>
                   Open in Google Calendar
                 </a>
                 <a href={`webcal://calendar.google.com/calendar/ical/${encodeURIComponent(CALENDAR_ID)}/public/basic.ics`}
-                  style={{ fontSize: 11, fontWeight: 700, color: "#a78bfa", background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.3)", borderRadius: 6, padding: "7px 14px", textDecoration: "none" }}>
-                  Subscribe (Apple / Outlook)
+                  style={{ fontSize: 10.5, fontWeight: 600, color: "#9c85d6", background: "transparent", border: "1px solid rgba(167,139,250,0.25)", borderRadius: 6, padding: "6px 12px", textDecoration: "none" }}>
+                  Subscribe
                 </a>
               </div>
             </div>
